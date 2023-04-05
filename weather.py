@@ -1,8 +1,17 @@
 import requests
 import keys
+import botMessagingModule as msg
+
+def fetchWeatherDetails():
+    audio.speak("Please tell me the name of the city")
+    city = audio.get_audio()
+    print("city: " + str(city))
+    weather_conditions = getWeatherForCity(str(city))
+    audio.speak(weather_conditions)
+    msg.insertMessage("Boss: " + str(weather_conditions))
 
 
-def get_weather(city):
+def getWeatherForCity(city):
     try:
         weather_key = keys.WEATHER_KEY
         url = "https://api.openweathermap.org/data/2.5/weather"

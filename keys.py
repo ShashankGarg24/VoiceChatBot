@@ -1,0 +1,8 @@
+EMAIL = "bossvchatbot@gmail.com"
+PASSWORD = "Bosschatbot1234"
+DICT = "A dictionary to store the emails of recipients"
+WEATHER_KEY = "28ba1b5413c4504fc0b80a6000448750"
+PATH_IMAGE = "images/voice4.png"
+PATH_MUSIC = "apps/Spotify"
+PATH_VS_CODE = "apps/Visual Studio Code"
+PATH_BROWSER = "Google Chrome"

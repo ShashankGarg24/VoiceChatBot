@@ -8,6 +8,7 @@ from google.auth.transport.requests import Request
 import pytz
 import pyttsx3
 import speech_recognition as sr
+import botMessagingModule as msg
 
 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 MONTHS = ["january", "febraury", "march", "april", "may", "june", "july", "august", "september"
@@ -124,7 +125,7 @@ def authenticate():
     # Call the Calendar API
 
 
-def get_all_events(service, msg_list, tk):
+def get_all_events(service, tk):
     now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
 
     events_result = service.events().list(calendarId='primary', timeMin=now,
@@ -134,14 +135,14 @@ def get_all_events(service, msg_list, tk):
 
     if not events:
         print('No upcoming events found.')
-        msg_list.insert(tk.END, "Boss: No upcoming events found!")
+        msg.insertMessage("Boss: No upcoming events found!")
 
     speak(f"You have {len(events)} events.")
     for event in events:
 
         start = event['start'].get('dateTime', event['start'].get('date'))
         # print(start, event['summary'])
-        msg_list.insert(tk.END, "Boss: " + str(start) + str(event['summary']))
+        msg.insertMessage("Boss: " + str(start) + str(event['summary']))
         start_time = str(start.split("T")[1].split("-")[0])
         if int(start_time.split(":")[0]) < 12:
             start_time = start_time + "am"
@@ -152,7 +153,7 @@ def get_all_events(service, msg_list, tk):
         speak(event["summary"] + " at " + start_time)
 
 
-def get_selected_events(service, day, msg_list, tk):
+def get_selected_events(service, day, tk):
     date = datetime.datetime.combine(day, datetime.datetime.min.time())
     end_date = datetime.datetime.combine(day, datetime.datetime.max.time())
     utc = pytz.UTC
@@ -165,14 +166,14 @@ def get_selected_events(service, day, msg_list, tk):
 
     if not events:
         speak('No events found!')
-        msg_list.insert(tk.END, "Boss: No events found!")
+        msg.insertMessage("Boss: No events found!")
     else:
         speak(f"You have {len(events)} events on this day.")
 
         for event in events:
             start = event['start'].get('dateTime', event['start'].get('date'))
             # print(start, event['summary'])
-            msg_list.insert(tk.END, "Boss: " + str(start) + str(event['summary']))
+            msg.insertMessage("Boss: " + str(start) + str(event['summary']))
             start_time = str(start.split("T")[1].split("-")[0])
             if int(start_time.split(":")[0]) < 12:
                 start_time = start_time + "am"

@@ -5,23 +5,23 @@ import random
 import tensorflow as tf
 from prepare import prepare_data
 import calender as cl
-import pyttsx3
-import speech_recognition as sr
 import subprocess
 import datetime
 import tkinter as tk
 import os
-import webbrowser as wb
 import threading
 import weather
-import wikipedia
 import smtplib
 import keys
+import wikipediaModule as wiki
+import musicModule as music
+import codingIdeModule as codeIde
+import browserModule as browser
+import audioModule as audio
+import botMessagingModule as msg
+import makeNote as notes
+import googleSearchModule as webSearch
 
-try:
-    from googlesearch import search
-except:
-    print("googlesearch not imported!")
 
 SERVICE = cl.authenticate()
 
@@ -34,37 +34,14 @@ frame.place(relwidth=0.8, relheight=0.8, relx=0.1, rely=0.1)
 your_msg = tk.StringVar()
 y_scroll_bar = tk.Scrollbar(frame)
 x_scroll_bar = tk.Scrollbar(frame, orient=tk.HORIZONTAL)
-msg_list = tk.Listbox(frame, height=20, width=50, yscrollcommand=y_scroll_bar.set, xscrollcommand=x_scroll_bar.set)
 y_scroll_bar.pack(side=tk.RIGHT, fill=tk.Y, expand=tk.FALSE)
 x_scroll_bar.pack(side=tk.BOTTOM, fill=tk.X, expand=tk.FALSE)
-msg_list.pack(side=tk.LEFT, fill=tk.BOTH)
-msg_list.pack()
+createMessageListBox(frame, y_scroll_bar, x_scroll_bar)
 frame.pack()
 
 with open("intents.json") as file:
     data = json.load(file)
 
-
-def speak(text):
-    speaker = pyttsx3.init()
-    speaker.say(text)
-    speaker.runAndWait()
-
-
-def get_audio():
-    r = sr.Recognizer()
-    with sr.Microphone() as source:
-        r.adjust_for_ambient_noise(source)
-        audio = r.listen(source)
-        said = ""
-
-        try:
-            said = r.recognize_google(audio)
-            print(said)
-        except Exception as e:
-            print("Exception: " + str(e))
-
-    return said
 
 
 tags = []  # Contains all the different tags
@@ -116,35 +93,6 @@ tags_dict = {}
 answers_dict = {}
 
 
-def note(text):
-    date = datetime.datetime.now()
-    file_name = "notes/" + str(date).replace(":", "-") + "-note.txt"
-    with open(file_name, "w") as f:
-        f.write(text)
-
-    subprocess.Popen(["notepad.exe", file_name])
-
-
-def make_note():
-    speak("What would you like me to write down? ")
-    write = get_audio()
-    note(write)
-    speak("I've made a note of that.")
-    msg_list.insert(tk.END, "Boss: I've made a note of that.")
-
-
-def perform_google_search():
-    speak("what would you like me to search for")
-    query = get_audio()
-    speak("I have the following results")
-    msg_list.insert(tk.END, "Boss: I have the following results:")
-    for result in search(query, tld="co.in", num=1, stop=1, pause=2):
-        msg_list.insert(tk.END, "Boss: " + str(result))
-        res = result
-
-    wb.open(res)
-
-
 def prepare_tags_list():
     for intent in data["intents"]:
         curr_tag = intent["tag"]
@@ -160,12 +108,12 @@ def prepare_tags_list():
 def wish():
     hour = int(datetime.datetime.now().hour)
     if 0 <= hour < 12:
-        speak("Good Morning")
+        audio.speak("Good Morning")
     elif 12 <= hour < 18:
-        speak("Good Afternoon")
+        audio.speak("Good Afternoon")
     else:
-        speak("Good Evening")
-    speak("I am Boss sir, How can I help you")
+        audio.speak("Good Evening")
+    audio.speak("I am Boss sir, How can I help you")
 
 
 
@@ -183,11 +131,11 @@ prepare_tags_list()
 
 
 def main():
-    sentence = get_audio()
-    msg_list.insert(tk.END, "You: " + sentence)
+    sentence = audio.get_audio()
+    msg.insertMessage("You: " + sentence)
     if sentence.count("exit") > 0:
-        msg_list.insert(tk.END, "Boss: Good Bye!")
-        speak("Good bye")
+        msg.insertMessage("Boss: Good Bye!")
+        audio.speak("Good bye")
         root.quit()
 
     tag = model.predict_tag(sentence)
@@ -199,92 +147,76 @@ def main():
 
     if sub_tag_word == "mails-send":
         try:
-            speak("Who do you want to send this mail")
-            to = get_audio()
-            speak("what should I say to " + to)
-            body = get_audio()
+            audio.speak("Who do you want to send this mail")
+            to = audio.get_audio()
+            audio.speak("what should I say to " + to)
+            body = audio.get_audio()
             send_mails(keys.DICT[to], body)
-            speak("Your mail has been sent successfully !")
-            msg_list.insert(tk.END, "Boss: Your mail has been sent successfully !")
+            audio.speak("Your mail has been sent successfully !")
+            msg.insertMessage("Boss: Your mail has been sent successfully !")
         except Exception as e:
             print(e)
-            speak("Sorry, Could not send this E-mail")
-            msg_list.insert(tk.END, "Boss: Sorry, Could not send this E-mail")
+            audio.speak("Sorry, Could not send this E-mail")
+            msg.insertMessage("Boss: Sorry, Could not send this E-mail")
     elif sub_tag_word == "wikipedia-open":
         ans = answers_dict.get(sub_tag_word)
         a = random.choice(ans)
-        speak("What you want to search for?")
-        searchFor = get_audio()
-        print("searchFor: " + str(searchFor))
-        speak(a)
-        results = wikipedia.summary(str(searchFor), auto_suggest=False, sentences=3)
-        print(results)
-        speak("According to wikipedia")
-        speak(results)
-        msg_list.insert(tk.END, "Boss: " + str(results))
+        wiki.runWikipediaSearch(a)
+        
     elif sub_tag_word == "music-open":
-        path = keys.PATH_MUSIC
         ans = answers_dict.get(sub_tag_word)
         a = random.choice(ans)
-        speak(a)
-        os.startfile(path)
-        msg_list.insert(tk.END, "Boss: opened Spotify")
+        music.openMusicApp(a)
+
     elif sub_tag_word == "visual-studio-code-open":
-        path = keys.PATH_VS_CODE
         ans = answers_dict.get(sub_tag_word)
         a = random.choice(ans)
-        speak(a)
-        os.startfile(path)
-        msg_list.insert(tk.END, "Boss: opened visual studio")
+        codeIde.openCodingIDE(a)
+
     elif sub_tag_word == "browser-open":
-        path = keys.PATH_BROWSER
         ans = answers_dict.get(sub_tag_word)
         a = random.choice(ans)
-        speak(a)
-        os.startfile(path)
-        msg_list.insert(tk.END, "Boss: opened browser")
+        browser.openBrowser(a)
+
     elif sub_tag_word == "call-weather-api":
-        speak("Please tell me the name of the city")
-        city = get_audio()
-        print("city: " + str(city))
-        weather_conditions = weather.get_weather(str(city))
-        speak(weather_conditions)
-        msg_list.insert(tk.END, "Boss: " + str(weather_conditions))
+        weather.fetchWeatherDetails()
+
     elif sub_tag_word == "know-date":
         date = cl.get_date_for_day(sentence)
-        speak(date)
-        msg_list.insert(tk.END, "Boss: " + str(date))
+        audio.speak(date)
+        msg.insertMessage("Boss: " + str(date))
 
     elif sub_tag_word == "get-events":
         try:
             day = cl.get_date(sentence)
-            cl.get_selected_events(SERVICE, day, msg_list, tk)
+            cl.get_selected_events(SERVICE, day, tk)
         except:
-            speak("None")
-            msg_list.insert(tk.END, "Boss: None")
+            audio.speak("None")
+            msg.insertMessage("Boss: None")
     elif sub_tag_word == "all-events":
         try:
-            cl.get_all_events(SERVICE, msg_list, tk)
+            cl.get_all_events(SERVICE, tk)
         except:
-            msg_list.insert(tk.END, "Boss: None")
-            speak("None")
+            msg.insertMessage("Boss: None")
+            audio.speak("None")
+
     elif sub_tag_word == "make-notes":
         try:
-            make_note()
+            notes.make_note()
         except:
-            msg_list.insert(tk.END, "Boss: Try again")
-            speak("try again")
+            msg.insertMessage("Boss: Try again")
+            audio.speak("try again")
     elif sub_tag_word == "search-google":
         try:
-            perform_google_search()
+            webSearch.perform_google_search()
         except:
-            msg_list.insert(tk.END, "Boss: An error occurred!")
-            speak("An error occurred")
+            msg.insertMessage("Boss: An error occurred!")
+            audio.speak("An error occurred")
     else:
         ans = answers_dict.get(sub_tag_word)
         a = random.choice(ans)
-        speak(a)
-        msg_list.insert(tk.END, "Boss: " + str(a))
+        audio.speak(a)
+        msg.insertMessage("Boss: " + str(a))
 
 
 def run():
