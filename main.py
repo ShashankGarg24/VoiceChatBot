@@ -17,10 +17,11 @@ import musicModule as music
 import codingIdeModule as codeIde
 import browserModule as browser
 import audioModule as audio
-import botMessagingModule as msg
 import makeNote as notes
 import googleSearchModule as webSearch
 import mailModule as mail
+import pyttsx3
+import speech_recognition as sr
 
 SERVICE = cl.authenticate()
 
@@ -33,9 +34,11 @@ frame.place(relwidth=0.8, relheight=0.8, relx=0.1, rely=0.1)
 your_msg = tk.StringVar()
 y_scroll_bar = tk.Scrollbar(frame)
 x_scroll_bar = tk.Scrollbar(frame, orient=tk.HORIZONTAL)
+msg_list = tk.Listbox(frame, height=20, width=50, yscrollcommand=y_scroll_bar.set, xscrollcommand=x_scroll_bar.set)
 y_scroll_bar.pack(side=tk.RIGHT, fill=tk.Y, expand=tk.FALSE)
 x_scroll_bar.pack(side=tk.BOTTOM, fill=tk.X, expand=tk.FALSE)
-createMessageListBox(frame, y_scroll_bar, x_scroll_bar)
+msg_list.pack(side=tk.LEFT, fill=tk.BOTH)
+msg_list.pack()
 frame.pack()
 
 with open("intents.json") as file:
@@ -119,9 +122,10 @@ prepare_tags_list()
 
 def main():
     sentence = audio.get_audio()
-    msg.insertMessage("You: " + sentence)
+    print(sentence)
+    msg_list.insert(tk.END, "You: " + sentence)
     if sentence.count("exit") > 0:
-        msg.insertMessage("Boss: Good Bye!")
+        msg_list.insert(tk.END, "Boss: Good Bye!")
         audio.speak("Good bye")
         root.quit()
 
@@ -133,61 +137,73 @@ def main():
     sub_tag_word = sub_list[sub]
 
     if sub_tag_word == "mails-send":
-        mail.sendMails()
+        print("mails-send")
+        mail.sendMails(msg_list)
 
     elif sub_tag_word == "wikipedia-open":
+        print("wikipedia-open")
         ans = answers_dict.get(sub_tag_word)
         a = random.choice(ans)
-        wiki.runWikipediaSearch(a)
+        wiki.runWikipediaSearch(a, msg_list)
         
     elif sub_tag_word == "music-open":
+        print("music-open")
         ans = answers_dict.get(sub_tag_word)
         a = random.choice(ans)
-        music.openMusicApp(a)
+        music.openMusicApp(a, msg_list)
 
     elif sub_tag_word == "visual-studio-code-open":
+        print("visual-studio-code-open")
         ans = answers_dict.get(sub_tag_word)
         a = random.choice(ans)
-        codeIde.openCodingIDE(a)
+        codeIde.openCodingIDE(a, msg_list)
 
     elif sub_tag_word == "browser-open":
+        print("browser-open")
         ans = answers_dict.get(sub_tag_word)
         a = random.choice(ans)
-        browser.openBrowser(a)
+        browser.openBrowser(a, msg_list)
 
     elif sub_tag_word == "call-weather-api":
-        weather.fetchWeatherDetails()
+        print("call-weather-api")
+        weather.fetchWeatherDetails(msg_list)
 
     elif sub_tag_word == "know-date":
+        print("know-date")
         date = cl.get_date_for_day(sentence)
         audio.speak(date)
-        msg.insertMessage("Boss: " + str(date))
+        msg_list.insert(tk.END, "Boss: " + str(date))
 
     elif sub_tag_word == "get-events":
         try:
+            print("get-events")
             day = cl.get_date(sentence)
-            cl.get_selected_events(SERVICE, day, tk)
+            cl.get_selected_events(SERVICE, day, msg_list)
         except:
             audio.speak("None")
-            msg.insertMessage("Boss: None")
+            msg_list.insert(tk.END, "Boss: None")
     elif sub_tag_word == "all-events":
         try:
-            cl.get_all_events(SERVICE, tk)
+            print("all-events")
+            cl.get_all_events(SERVICE, msg_list)
         except:
-            msg.insertMessage("Boss: None")
+            msg_list.insert(tk.END, "Boss: None")
             audio.speak("None")
 
     elif sub_tag_word == "make-notes":
-        notes.make_note()
+        print("make-notes")
+        notes.make_note(msg_list)
 
     elif sub_tag_word == "search-google":
-        webSearch.perform_google_search()
+        print("search-google")
+        webSearch.perform_google_search(msg_list)
 
     else:
+        print("Else")
         ans = answers_dict.get(sub_tag_word)
         a = random.choice(ans)
         audio.speak(a)
-        msg.insertMessage("Boss: " + str(a))
+        msg_list.insert(tk.END, "Boss: " + str(a))
 
 
 def run():

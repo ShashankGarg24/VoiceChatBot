@@ -1,14 +1,13 @@
 import os
 import audioModule as audio
-import botMessagingModule as msg
+import tkinter as tk
 
-
-def openCodingIDE(a):
+def openCodingIDE(a, msg):
     try:
         path = keys.PATH_VS_CODE
         audio.speak(a)
         os.startfile(path)
-        msg.insertMessage("Boss: opened visual studio")
-    catch Exception as e:
+        msg.insert(tk.END, "Boss: opened visual studio")
+    except Exception as e:
         print(e)
         audio.speak("Sorry, Could not open the coding IDE")

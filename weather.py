@@ -1,14 +1,14 @@
 import requests
 import keys
-import botMessagingModule as msg
+import tkinter as tk
 
-def fetchWeatherDetails():
+def fetchWeatherDetails(msg):
     audio.speak("Please tell me the name of the city")
     city = audio.get_audio()
     print("city: " + str(city))
     detailedMsg, chatMsg = getWeatherForCity(str(city))
     audio.speak(detailedMsg)
-    msg.insertMessage("Boss: " + str(chatMsg))
+    msg.insert(tk.END, "Boss: " + str(chatMsg))
 
 
 def getWeatherForCity(city):

@@ -1,15 +1,15 @@
 import os
 import audioModule as audio
-import botMessagingModule as msg
+import tkinter as tk
 
 
-def openMusicApp(a):
+def openMusicApp(a, msg):
     try:
         path = keys.PATH_MUSIC
         audio.speak(a)
         os.startfile(path)
-        msg.insertMessage("Boss: opened Music")
-    catch Exception as e:
+        msg.insert(tk.END, "Boss: opened Music")
+    except Exception as e:
         print(e)
         audio.speak("Sorry, Could not open the music app")
     

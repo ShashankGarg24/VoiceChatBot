@@ -1,15 +1,15 @@
 import os
 import audioModule as audio
-import botMessagingModule as msg
+import tkinter as tk
 
 
-def openBrowser(a):
+def openBrowser(a, msg):
     try:
         path = keys.PATH_BROWSER
         audio.speak(a)
         os.startfile(path)
-        msg.insertMessage("Boss: opened browser")
-    catch Exception as e:
+        msg.insert(tk.END, "Boss: opened browser")
+    except Exception as e:
         print(e)
         audio.speak("Sorry, Could not open the browser")
 

@@ -1,6 +1,6 @@
 import datetime
 import subprocess
-import botMessagingModule as msg
+import tkinter as tk
 import audioModule as audio
 
 
@@ -13,15 +13,15 @@ def note(text):
     subprocess.Popen(["notepad.exe", file_name])
 
 
-def make_note():
+def make_note(msg):
     try:
         audio.speak("What would you like me to write down? ")
         write = audio.get_audio()
         note(write)
         audio.speak("I've made a note of that.")
-        msg_list.insert(tk.END, "Boss: I've made a note of that.")
+        msg.insert(tk.END, "Boss: I've made a note of that.")
     except:
-        msg.insertMessage("Boss: Try again")
+        msg.insert(tk.END, "Boss: Try again")
         audio.speak("try again")
 
     

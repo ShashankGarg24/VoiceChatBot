@@ -1,4 +1,4 @@
-import botMessagingModule as msg
+import tkinter as tk
 import audioModule as audio
 import smtplib
 
@@ -12,7 +12,7 @@ def send_mails(to, body):
     server.close()
 
 
-def sendMails():
+def sendMails(msg):
     try:
         audio.speak("Who do you want to send this mail")
         to = audio.get_audio()
@@ -20,8 +20,8 @@ def sendMails():
         body = audio.get_audio()
         send_mails(keys.DICT[to], body)
         audio.speak("Your mail has been sent successfully !")
-        msg.insertMessage("Boss: Your mail has been sent successfully !")
+        msg.insert(tk.END, "Boss: Your mail has been sent successfully !")
     except Exception as e:
         print(e)
         audio.speak("Sorry, Could not send this E-mail")
-        msg.insertMessage("Boss: Sorry, Could not send this E-mail")
+        msg.insert(tk.END, "Boss: Sorry, Could not send this E-mail")
