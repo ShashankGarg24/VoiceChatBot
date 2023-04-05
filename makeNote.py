@@ -1,5 +1,7 @@
 import datetime
 import subprocess
+import botMessagingModule as msg
+import audioModule as audio
 
 
 def note(text):
@@ -12,8 +14,14 @@ def note(text):
 
 
 def make_note():
-    audio.speak("What would you like me to write down? ")
-    write = audio.get_audio()
-    note(write)
-    audio.speak("I've made a note of that.")
-    msg_list.insert(tk.END, "Boss: I've made a note of that.")
+    try:
+        audio.speak("What would you like me to write down? ")
+        write = audio.get_audio()
+        note(write)
+        audio.speak("I've made a note of that.")
+        msg_list.insert(tk.END, "Boss: I've made a note of that.")
+    except:
+        msg.insertMessage("Boss: Try again")
+        audio.speak("try again")
+
+    

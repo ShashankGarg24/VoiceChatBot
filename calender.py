@@ -9,6 +9,7 @@ import pytz
 import pyttsx3
 import speech_recognition as sr
 import botMessagingModule as msg
+import audioModule as audio
 
 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 MONTHS = ["january", "febraury", "march", "april", "may", "june", "july", "august", "september"
@@ -18,26 +19,6 @@ DAY_EXTENTIONS = ["st", "nd", "th", "rd"]
 MONTH_DAYS = {1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30,
               7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31}
 
-
-def speak(text):
-    speaker = pyttsx3.init()
-    speaker.say(text)
-    speaker.runAndWait()
-
-
-def get_audio():
-    r = sr.Recognizer()
-    with sr.Microphone() as source:
-        audio = r.listen(source)
-        said = ""
-
-        try:
-            said = r.recognize_google(audio)
-            print(said)
-        except Exception as e:
-            print("Exception: " + str(e))
-
-    return said
 
 
 def get_date(text):
@@ -137,7 +118,7 @@ def get_all_events(service, tk):
         print('No upcoming events found.')
         msg.insertMessage("Boss: No upcoming events found!")
 
-    speak(f"You have {len(events)} events.")
+    audio.speak(f"You have {len(events)} events.")
     for event in events:
 
         start = event['start'].get('dateTime', event['start'].get('date'))
@@ -150,7 +131,7 @@ def get_all_events(service, tk):
             start_time = str(int(start_time.split(":")[0]) - 12) + start_time.split(":")[1]
             start_time = start_time + "pm"
 
-        speak(event["summary"] + " at " + start_time)
+        audio.speak(event["summary"] + " at " + start_time)
 
 
 def get_selected_events(service, day, tk):
@@ -165,10 +146,10 @@ def get_selected_events(service, day, tk):
     events = events_result.get('items', [])
 
     if not events:
-        speak('No events found!')
+        audio.speak('No events found!')
         msg.insertMessage("Boss: No events found!")
     else:
-        speak(f"You have {len(events)} events on this day.")
+        audio.speak(f"You have {len(events)} events on this day.")
 
         for event in events:
             start = event['start'].get('dateTime', event['start'].get('date'))
@@ -181,7 +162,7 @@ def get_selected_events(service, day, tk):
                 start_time = str(int(start_time.split(":")[0]) - 12)
                 start_time = start_time + "pm"
 
-            speak(event["summary"] + " at " + start_time)
+            audio.speak(event["summary"] + " at " + start_time)
 
 
 def get_date_for_day(text):

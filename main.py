@@ -11,7 +11,6 @@ import tkinter as tk
 import os
 import threading
 import weather
-import smtplib
 import keys
 import wikipediaModule as wiki
 import musicModule as music
@@ -21,7 +20,7 @@ import audioModule as audio
 import botMessagingModule as msg
 import makeNote as notes
 import googleSearchModule as webSearch
-
+import mailModule as mail
 
 SERVICE = cl.authenticate()
 
@@ -41,7 +40,6 @@ frame.pack()
 
 with open("intents.json") as file:
     data = json.load(file)
-
 
 
 tags = []  # Contains all the different tags
@@ -116,17 +114,6 @@ def wish():
     audio.speak("I am Boss sir, How can I help you")
 
 
-
-
-def send_mails(to, body):
-    server = smtplib.SMTP('smtp.gmail.com', 587)
-    server.ehlo()
-    server.starttls()
-    server.login(keys.EMAIL, keys.PASSWORD)
-    server.sendmail('4as1827000224@gmail.com', to, body)
-    server.close()
-
-
 prepare_tags_list()
 
 
@@ -146,18 +133,8 @@ def main():
     sub_tag_word = sub_list[sub]
 
     if sub_tag_word == "mails-send":
-        try:
-            audio.speak("Who do you want to send this mail")
-            to = audio.get_audio()
-            audio.speak("what should I say to " + to)
-            body = audio.get_audio()
-            send_mails(keys.DICT[to], body)
-            audio.speak("Your mail has been sent successfully !")
-            msg.insertMessage("Boss: Your mail has been sent successfully !")
-        except Exception as e:
-            print(e)
-            audio.speak("Sorry, Could not send this E-mail")
-            msg.insertMessage("Boss: Sorry, Could not send this E-mail")
+        mail.sendMails()
+
     elif sub_tag_word == "wikipedia-open":
         ans = answers_dict.get(sub_tag_word)
         a = random.choice(ans)
@@ -201,17 +178,11 @@ def main():
             audio.speak("None")
 
     elif sub_tag_word == "make-notes":
-        try:
-            notes.make_note()
-        except:
-            msg.insertMessage("Boss: Try again")
-            audio.speak("try again")
+        notes.make_note()
+
     elif sub_tag_word == "search-google":
-        try:
-            webSearch.perform_google_search()
-        except:
-            msg.insertMessage("Boss: An error occurred!")
-            audio.speak("An error occurred")
+        webSearch.perform_google_search()
+
     else:
         ans = answers_dict.get(sub_tag_word)
         a = random.choice(ans)

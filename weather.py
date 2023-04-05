@@ -6,9 +6,9 @@ def fetchWeatherDetails():
     audio.speak("Please tell me the name of the city")
     city = audio.get_audio()
     print("city: " + str(city))
-    weather_conditions = getWeatherForCity(str(city))
-    audio.speak(weather_conditions)
-    msg.insertMessage("Boss: " + str(weather_conditions))
+    detailedMsg, chatMsg = getWeatherForCity(str(city))
+    audio.speak(detailedMsg)
+    msg.insertMessage("Boss: " + str(chatMsg))
 
 
 def getWeatherForCity(city):
@@ -18,13 +18,26 @@ def getWeatherForCity(city):
         params = {'appid': weather_key, 'q': city, 'units': 'imperial'}
         response = requests.get(url, params=params)
         weather = response.json()
+
         print(weather)
-        text = "The weather condition of " + str(weather['name']) + " is as follows " + "the overhead condition is " + \
-               str(weather['weather'][0]['description']) + ", the temperature in Celsius is " + str(get_celsius_temperature(weather['main']['temp'])) + \
-               ", pressure is " + str(weather['main']['pressure']) + \
-               " and humidity is " + str(weather['main']['humidity'])
+        city = str(weather['name'])
+        overhead = str(weather['weather'][0]['description'])
+        temperature = str(get_celsius_temperature(weather['main']['temp']))
+        humidity = str(weather['main']['humidity'])
+        pressure = str(weather['main']['pressure'])
+
+        chatText = "location: " + city + "\n" + \
+                    "overhead: " + overhead + "\n" + \
+                    "temperature: " + temperature + "\n" + \
+                    "humidity: " + humidity + "\n" + \
+                    "pressure: " + pressure
+
+        text = "The weather condition of " + city + " is as follows " + "the overhead condition is " + \
+               overhead + ", the temperature in Celsius is " + temperature + \
+               ", pressure is " + pressure + \
+               " and humidity is " + humidity
         print(">>>>>>>>" + text)
-        return text
+        return text, chatText
     except:
         return "Oops! Could not find any city by this name"
 
