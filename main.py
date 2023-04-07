@@ -5,23 +5,24 @@ import random
 import tensorflow as tf
 from prepare import prepare_data
 import calender as cl
+import pyttsx3
+import speech_recognition as sr
 import subprocess
 import datetime
 import tkinter as tk
 import os
+import webbrowser as wb
 import threading
 import weather
+import wikipedia
+import smtplib
 import keys
-import wikipediaModule as wiki
-import musicModule as music
-import codingIdeModule as codeIde
-import browserModule as browser
-import audioModule as audio
-import makeNote as notes
-import googleSearchModule as webSearch
-import mailModule as mail
-import pyttsx3
-import speech_recognition as sr
+from pathlib import Path
+
+try:
+    from googlesearch import search
+except:
+    print("googlesearch not imported!")
 
 SERVICE = cl.authenticate()
 
@@ -43,6 +44,27 @@ frame.pack()
 
 with open("intents.json") as file:
     data = json.load(file)
+
+
+def speak(text):
+    speaker = pyttsx3.init()
+    speaker.say(text)
+    speaker.runAndWait()
+
+
+def get_audio():
+    r = sr.Recognizer()
+    with sr.Microphone() as source:
+        audio = r.listen(source)
+        said = ""
+
+        try:
+            said = r.recognize_google(audio)
+            print(said)
+        except Exception as e:
+            print("Exception: " + str(e))
+
+    return said
 
 
 tags = []  # Contains all the different tags
@@ -94,6 +116,35 @@ tags_dict = {}
 answers_dict = {}
 
 
+def note(text):
+    date = datetime.datetime.now()
+    file_name = "notes/" + str(date).replace(":", "-") + "-note.txt"
+    with open(file_name, "w") as f:
+        f.write(text)
+
+    subprocess.Popen(["notepad.exe", file_name])
+
+
+def make_note():
+    speak("What would you like me to write down? ")
+    write = get_audio()
+    note(write)
+    speak("I've made a note of that.")
+    msg_list.insert(tk.END, "Boss: I've made a note of that.")
+
+
+def perform_google_search():
+    speak("what would you like me to search for")
+    query = get_audio()
+    speak("I have the following results")
+    msg_list.insert(tk.END, "Boss: I have the following results:")
+    for result in search(query, tld="co.in", num=1, stop=1, pause=2):
+        msg_list.insert(tk.END, "Boss: " + str(result))
+        res = result
+
+    wb.open(res)
+
+
 def prepare_tags_list():
     for intent in data["intents"]:
         curr_tag = intent["tag"]
@@ -109,24 +160,34 @@ def prepare_tags_list():
 def wish():
     hour = int(datetime.datetime.now().hour)
     if 0 <= hour < 12:
-        audio.speak("Good Morning")
+        speak("Good Morning")
     elif 12 <= hour < 18:
-        audio.speak("Good Afternoon")
+        speak("Good Afternoon")
     else:
-        audio.speak("Good Evening")
-    audio.speak("I am Boss sir, How can I help you")
+        speak("Good Evening")
+    speak("I am Boss sir, How can I help you")
+
+
+
+
+def send_mails(to, body):
+    server = smtplib.SMTP('smtp.gmail.com', 587)
+    server.ehlo()
+    server.starttls()
+    server.login(keys.EMAIL, keys.PASSWORD)
+    server.sendmail('4as1827000224@gmail.com', to, body)
+    server.close()
 
 
 prepare_tags_list()
 
 
 def main():
-    sentence = audio.get_audio()
-    print(sentence)
+    sentence = get_audio()
     msg_list.insert(tk.END, "You: " + sentence)
     if sentence.count("exit") > 0:
         msg_list.insert(tk.END, "Boss: Good Bye!")
-        audio.speak("Good bye")
+        speak("Good bye")
         root.quit()
 
     tag = model.predict_tag(sentence)
@@ -137,72 +198,99 @@ def main():
     sub_tag_word = sub_list[sub]
 
     if sub_tag_word == "mails-send":
-        print("mails-send")
-        mail.sendMails(msg_list)
-
+        try:
+            speak("Who do you want to send this mail")
+            to = get_audio()
+            speak("what should I say to " + to)
+            body = get_audio()
+            send_mails(keys.DICT[to], body)
+            speak("Your mail has been sent successfully !")
+            msg_list.insert(tk.END, "Boss: Your mail has been sent successfully !")
+        except Exception as e:
+            print(e)
+            speak("Sorry, Could not send this E-mail")
+            msg_list.insert(tk.END, "Boss: Sorry, Could not send this E-mail")
     elif sub_tag_word == "wikipedia-open":
-        print("wikipedia-open")
         ans = answers_dict.get(sub_tag_word)
         a = random.choice(ans)
-        wiki.runWikipediaSearch(a, msg_list)
-        
+        try:
+            speak("What you want to search for?")
+            searchFor = get_audio()
+            print("searchFor: " + str(searchFor))
+            speak(a)
+            results = wikipedia.summary(str(searchFor), auto_suggest=False, sentences=3)
+            speak("According to wikipedia")
+            print(results)
+            speak(results)
+            msg_list.insert(tk.END, "Boss: " + str(results))
+        except Exception as e:
+            print(e)
+            speak("Cannot open wikipedia results")
     elif sub_tag_word == "music-open":
-        print("music-open")
+        path = keys.PATH_MUSIC
         ans = answers_dict.get(sub_tag_word)
         a = random.choice(ans)
-        music.openMusicApp(a, msg_list)
-
+        speak(a)
+        filepath = Path(__file__).parent / path
+        os.startfile(filepath)
+        msg_list.insert(tk.END, "Boss: opened Spotify")
     elif sub_tag_word == "visual-studio-code-open":
-        print("visual-studio-code-open")
+        path = keys.PATH_VS_CODE
         ans = answers_dict.get(sub_tag_word)
         a = random.choice(ans)
-        codeIde.openCodingIDE(a, msg_list)
-
+        speak(a)
+        filepath = Path(__file__).parent / path
+        os.startfile(filepath)
+        msg_list.insert(tk.END, "Boss: opened visual studio")
     elif sub_tag_word == "browser-open":
-        print("browser-open")
+        path = keys.PATH_BROWSER
         ans = answers_dict.get(sub_tag_word)
         a = random.choice(ans)
-        browser.openBrowser(a, msg_list)
-
+        speak(a)
+        filepath = Path(__file__).parent / path
+        os.startfile(filepath)
+        msg_list.insert(tk.END, "Boss: opened browser")
     elif sub_tag_word == "call-weather-api":
-        print("call-weather-api")
-        weather.fetchWeatherDetails(msg_list)
-
+        speak("Please tell me the name of the city")
+        city = get_audio()
+        print("city: " + str(city))
+        detailedMsg, chatMsg = weather.get_weather(str(city))
+        speak(detailedMsg)
+        msg_list.insert(tk.END, "Boss: " + str(chatMsg))
     elif sub_tag_word == "know-date":
-        print("know-date")
         date = cl.get_date_for_day(sentence)
-        audio.speak(date)
+        speak(date)
         msg_list.insert(tk.END, "Boss: " + str(date))
 
     elif sub_tag_word == "get-events":
         try:
-            print("get-events")
             day = cl.get_date(sentence)
-            cl.get_selected_events(SERVICE, day, msg_list)
+            cl.get_selected_events(SERVICE, day, msg_list, tk)
         except:
-            audio.speak("None")
+            speak("None")
             msg_list.insert(tk.END, "Boss: None")
     elif sub_tag_word == "all-events":
         try:
-            print("all-events")
-            cl.get_all_events(SERVICE, msg_list)
+            cl.get_all_events(SERVICE, msg_list, tk)
         except:
             msg_list.insert(tk.END, "Boss: None")
-            audio.speak("None")
-
+            speak("None")
     elif sub_tag_word == "make-notes":
-        print("make-notes")
-        notes.make_note(msg_list)
-
+        try:
+            make_note()
+        except:
+            msg_list.insert(tk.END, "Boss: Try again")
+            speak("try again")
     elif sub_tag_word == "search-google":
-        print("search-google")
-        webSearch.perform_google_search(msg_list)
-
+        try:
+            perform_google_search()
+        except:
+            msg_list.insert(tk.END, "Boss: An error occurred!")
+            speak("An error occurred")
     else:
-        print("Else")
         ans = answers_dict.get(sub_tag_word)
         a = random.choice(ans)
-        audio.speak(a)
+        speak(a)
         msg_list.insert(tk.END, "Boss: " + str(a))
 
 

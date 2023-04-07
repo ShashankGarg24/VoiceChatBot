@@ -7,9 +7,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 import pytz
 import pyttsx3
-import tkinter as tk
 import speech_recognition as sr
-import audioModule as audio
 
 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 MONTHS = ["january", "febraury", "march", "april", "may", "june", "july", "august", "september"
@@ -19,6 +17,26 @@ DAY_EXTENTIONS = ["st", "nd", "th", "rd"]
 MONTH_DAYS = {1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30,
               7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31}
 
+
+def speak(text):
+    speaker = pyttsx3.init()
+    speaker.say(text)
+    speaker.runAndWait()
+
+
+def get_audio():
+    r = sr.Recognizer()
+    with sr.Microphone() as source:
+        audio = r.listen(source)
+        said = ""
+
+        try:
+            said = r.recognize_google(audio)
+            print(said)
+        except Exception as e:
+            print("Exception: " + str(e))
+
+    return said
 
 
 def get_date(text):
@@ -106,7 +124,7 @@ def authenticate():
     # Call the Calendar API
 
 
-def get_all_events(service, msg):
+def get_all_events(service, msg_list, tk):
     now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
 
     events_result = service.events().list(calendarId='primary', timeMin=now,
@@ -116,14 +134,14 @@ def get_all_events(service, msg):
 
     if not events:
         print('No upcoming events found.')
-        msg.insert(tk.END, "Boss: No upcoming events found!")
+        msg_list.insert(tk.END, "Boss: No upcoming events found!")
 
-    audio.speak(f"You have {len(events)} events.")
+    speak(f"You have {len(events)} events.")
     for event in events:
 
         start = event['start'].get('dateTime', event['start'].get('date'))
         # print(start, event['summary'])
-        msg.insert(tk.END, "Boss: " + str(start) + str(event['summary']))
+        msg_list.insert(tk.END, "Boss: " + str(start) + str(event['summary']))
         start_time = str(start.split("T")[1].split("-")[0])
         if int(start_time.split(":")[0]) < 12:
             start_time = start_time + "am"
@@ -131,10 +149,10 @@ def get_all_events(service, msg):
             start_time = str(int(start_time.split(":")[0]) - 12) + start_time.split(":")[1]
             start_time = start_time + "pm"
 
-        audio.speak(event["summary"] + " at " + start_time)
+        speak(event["summary"] + " at " + start_time)
 
 
-def get_selected_events(service, day, msg):
+def get_selected_events(service, day, msg_list, tk):
     date = datetime.datetime.combine(day, datetime.datetime.min.time())
     end_date = datetime.datetime.combine(day, datetime.datetime.max.time())
     utc = pytz.UTC
@@ -146,15 +164,15 @@ def get_selected_events(service, day, msg):
     events = events_result.get('items', [])
 
     if not events:
-        audio.speak('No events found!')
-        msg.insert(tk.END, "Boss: No events found!")
+        speak('No events found!')
+        msg_list.insert(tk.END, "Boss: No events found!")
     else:
-        audio.speak(f"You have {len(events)} events on this day.")
+        speak(f"You have {len(events)} events on this day.")
 
         for event in events:
             start = event['start'].get('dateTime', event['start'].get('date'))
             # print(start, event['summary'])
-            msg.insert(tk.END, "Boss: " + str(start) + str(event['summary']))
+            msg_list.insert(tk.END, "Boss: " + str(start) + str(event['summary']))
             start_time = str(start.split("T")[1].split("-")[0])
             if int(start_time.split(":")[0]) < 12:
                 start_time = start_time + "am"
@@ -162,7 +180,7 @@ def get_selected_events(service, day, msg):
                 start_time = str(int(start_time.split(":")[0]) - 12)
                 start_time = start_time + "pm"
 
-            audio.speak(event["summary"] + " at " + start_time)
+            speak(event["summary"] + " at " + start_time)
 
 
 def get_date_for_day(text):
