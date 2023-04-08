@@ -265,12 +265,15 @@ def main():
     elif sub_tag_word == "get-events":
         try:
             day = cl.get_date(sentence)
+            print("Single event")
+            print(day)
             cl.get_selected_events(SERVICE, day, msg_list, tk)
         except:
             speak("None")
             msg_list.insert(tk.END, "Boss: None")
     elif sub_tag_word == "all-events":
         try:
+            print("All event")
             cl.get_all_events(SERVICE, msg_list, tk)
         except:
             msg_list.insert(tk.END, "Boss: None")

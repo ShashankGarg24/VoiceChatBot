@@ -8,6 +8,12 @@ from google.auth.transport.requests import Request
 import pytz
 import pyttsx3
 import speech_recognition as sr
+from pathlib import Path
+import httplib2
+from oauth2client import client
+from oauth2client import tools
+from oauth2client.file import Storage
+import keys
 
 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 MONTHS = ["january", "febraury", "march", "april", "may", "june", "july", "august", "september"
@@ -16,8 +22,14 @@ DAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "satur
 DAY_EXTENTIONS = ["st", "nd", "th", "rd"]
 MONTH_DAYS = {1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30,
               7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31}
+APPLICATION_NAME = 'Boss Chat Bot'
+try:
+    import argparse
+    flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
+except ImportError:
+    flags = None
 
-
+    
 def speak(text):
     speaker = pyttsx3.init()
     speaker.say(text)
@@ -124,43 +136,63 @@ def authenticate():
     # Call the Calendar API
 
 
+def get_event_details(event):
+    start = event['start'].get('dateTime', event['start'].get('date'))
+    start_date = str(start.split("T")[0])
+    start_time = str(start.split("T")[1].split("+")[0])
+    startDT = datetime.datetime.strptime(start_date + " " + start_time, "%Y-%m-%d %H:%M:%S")
+    startDateTime = startDT.strftime("%A, %d %B %Y, %I:%M%p")
+
+    end = event['end'].get('dateTime', event['end'].get('date'))
+    end_date = str(end.split("T")[0])
+    end_time = str(end.split("T")[1].split("+")[0])
+    endDT = datetime.datetime.strptime(end_date + " " + end_time, "%Y-%m-%d %H:%M:%S")
+    endDateTime = endDT.strftime("%A, %d %B %Y, %I:%M%p")
+
+    eventText = event["summary"] + " starting at " + startDateTime + " and ending at " + endDateTime
+    return eventText
+
+
 def get_all_events(service, msg_list, tk):
     now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
-
+    print(now)
     events_result = service.events().list(calendarId='primary', timeMin=now,
                                           maxResults=20, singleEvents=True,
                                           orderBy='startTime').execute()
+    print(events_result)
     events = events_result.get('items', [])
 
     if not events:
         print('No upcoming events found.')
         msg_list.insert(tk.END, "Boss: No upcoming events found!")
 
+    msg_list.insert(tk.END, "Boss: You have " + str(len(events)) + " events")
     speak(f"You have {len(events)} events.")
     for event in events:
-
-        start = event['start'].get('dateTime', event['start'].get('date'))
-        # print(start, event['summary'])
-        msg_list.insert(tk.END, "Boss: " + str(start) + str(event['summary']))
-        start_time = str(start.split("T")[1].split("-")[0])
-        if int(start_time.split(":")[0]) < 12:
-            start_time = start_time + "am"
-        else:
-            start_time = str(int(start_time.split(":")[0]) - 12) + start_time.split(":")[1]
-            start_time = start_time + "pm"
-
-        speak(event["summary"] + " at " + start_time)
+        print(event)
+        eventText = get_event_details(event)
+        print(eventText)
+        msg_list.insert(tk.END, "Boss: " + eventText)
+        speak(eventText)
 
 
-def get_selected_events(service, day, msg_list, tk):
-    date = datetime.datetime.combine(day, datetime.datetime.min.time())
-    end_date = datetime.datetime.combine(day, datetime.datetime.max.time())
-    utc = pytz.UTC
-    date = date.astimezone(utc)
-    end_date = end_date.astimezone(utc)
+def get_selected_events(service, date, msg_list, tk):
+    try:
+        dtArray = str(date).split("-")
+        dt = datetime.date(int(dtArray[0]), int(dtArray[1]), int(dtArray[2]))
+        date = datetime.datetime.combine(dt, datetime.datetime.min.time())
+        print(date)
+        end_date = datetime.datetime.combine(dt, datetime.datetime.max.time())
+        utc = pytz.UTC
+        date = date.astimezone(utc)
+        end_date = end_date.astimezone(utc)
 
-    events_result = service.events().list(calendarId='primary', timeMin=date.isoformat(), timeMax=end_date.isoformat(),
-                                          singleEvents=True, orderBy='startTime').execute()
+        print(end_date)
+        events_result = service.events().list(calendarId='primary', timeMin=date.isoformat(), timeMax=end_date.isoformat(),
+                                            singleEvents=True, orderBy='startTime').execute()
+        print(events_result)
+    except Exception as e:
+        print(e)
     events = events_result.get('items', [])
 
     if not events:
@@ -170,17 +202,10 @@ def get_selected_events(service, day, msg_list, tk):
         speak(f"You have {len(events)} events on this day.")
 
         for event in events:
-            start = event['start'].get('dateTime', event['start'].get('date'))
-            # print(start, event['summary'])
-            msg_list.insert(tk.END, "Boss: " + str(start) + str(event['summary']))
-            start_time = str(start.split("T")[1].split("-")[0])
-            if int(start_time.split(":")[0]) < 12:
-                start_time = start_time + "am"
-            else:
-                start_time = str(int(start_time.split(":")[0]) - 12)
-                start_time = start_time + "pm"
+            eventText = get_event_details(event)
 
-            speak(event["summary"] + " at " + start_time)
+            msg_list.insert(tk.END, "Boss: " + eventText)
+            speak(eventText)
 
 
 def get_date_for_day(text):
