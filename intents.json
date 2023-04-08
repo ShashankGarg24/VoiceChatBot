@@ -160,6 +160,21 @@
 		]
 	},
 	{
+		"tag": "advance-search",
+		"all_questions": ["chat with chatgpt", "search on chatgpt","perform advanced search",
+						 "advance searching", "can you search on chatgpt",
+						 "perform an advanced search", "search on chatpt", "search chatpt"],
+		"sub_tags": [
+			{
+				"sub": "search-advance",
+				"questions": ["chat with chatgpt", "search on chatgpt","perform advanced search",
+				"advance searching", "can you search on chatgpt",
+				"perform an advanced search", "search on chatpt", "search chatpt"],
+				"answers": ["Sure, let' me check'!"]
+			}
+		]
+	},
+	{
 		"tag": "weather-api-call",
 		"all_questions": ["can you tell me something about the weather conditions", "what is the current weather conditions","I want to go out now is it raining",
 						 "hey, how is the weather", "hey, tell me about the weather conditions i want to go out for a walk",

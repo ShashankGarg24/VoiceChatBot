@@ -18,7 +18,7 @@ import wikipedia
 import smtplib
 import keys
 from pathlib import Path
-
+import chatGPTModule as cgpt
 try:
     from googlesearch import search
 except:
@@ -255,8 +255,8 @@ def main():
         city = get_audio()
         print("city: " + str(city))
         detailedMsg, chatMsg = weather.get_weather(str(city))
-        speak(detailedMsg)
         msg_list.insert(tk.END, "Boss: " + str(chatMsg))
+        speak(detailedMsg)
     elif sub_tag_word == "know-date":
         date = cl.get_date_for_day(sentence)
         speak(date)
@@ -290,11 +290,17 @@ def main():
         except:
             msg_list.insert(tk.END, "Boss: An error occurred!")
             speak("An error occurred")
+    elif sub_tag_word == "search-advance":
+        speak("What you want to search for")
+        searchFor = get_audio()
+        ans = cgpt.get_chatgpt_results(searchFor)
+        msg_list.insert(tk.END, "Boss: " + ans)
+        speak(ans)        
     else:
         ans = answers_dict.get(sub_tag_word)
         a = random.choice(ans)
-        speak(a)
         msg_list.insert(tk.END, "Boss: " + str(a))
+        speak(a)
 
 
 def run():
