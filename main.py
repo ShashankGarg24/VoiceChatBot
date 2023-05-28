@@ -10,6 +10,7 @@ import speech_recognition as sr
 import subprocess
 import datetime
 import tkinter as tk
+import noisereduce as nr
 import os
 import webbrowser as wb
 import threading
@@ -55,6 +56,7 @@ def speak(text):
 def get_audio():
     r = sr.Recognizer()
     with sr.Microphone() as source:
+        r.adjust_for_ambient_noise(source)
         audio = r.listen(source)
         said = ""
 
@@ -175,7 +177,9 @@ def send_mails(to, body):
     server.ehlo()
     server.starttls()
     server.login(keys.EMAIL, keys.PASSWORD)
-    server.sendmail('4as1827000224@gmail.com', to, body)
+    for em in to:
+        server.sendmail('bossvchatbot@gmail.com', em, body)
+ #   server.sendmail('bossvchatbot@gmail.com', to, body)
     server.close()
 
 
@@ -199,11 +203,9 @@ def main():
 
     if sub_tag_word == "mails-send":
         try:
-            speak("Who do you want to send this mail")
-            to = get_audio()
-            speak("what should I say to " + to)
+            speak("what should I say ")
             body = get_audio()
-            send_mails(keys.DICT[to], body)
+            send_mails(keys.DICT, body)
             speak("Your mail has been sent successfully !")
             msg_list.insert(tk.END, "Boss: Your mail has been sent successfully !")
         except Exception as e:

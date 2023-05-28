@@ -154,6 +154,7 @@ def get_event_details(event):
 
 
 def get_all_events(service, msg_list, tk):
+    print("All Event-1")
     now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
     print(now)
     events_result = service.events().list(calendarId='primary', timeMin=now,
@@ -178,6 +179,7 @@ def get_all_events(service, msg_list, tk):
 
 def get_selected_events(service, date, msg_list, tk):
     try:
+        print("Single Event-1")
         dtArray = str(date).split("-")
         dt = datetime.date(int(dtArray[0]), int(dtArray[1]), int(dtArray[2]))
         date = datetime.datetime.combine(dt, datetime.datetime.min.time())
